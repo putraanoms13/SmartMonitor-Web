@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Masuk - SmartMonitor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='login.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            background: linear-gradient(rgba(27, 36, 49, 0.75),
+                rgba(27, 36, 49, 0.75)),
+            url("{{ url_for('static', filename='bg-depan.jpg') }}");
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+    </style>
+
+    <div class="login-container">
+        <div class="login-card">
+            <h2 class="form-title">Selamat Datang di<br>Smart Monitor</h2>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div
+                style="background-color: rgba(255, 76, 76, 0.1); border: 1px solid #ff4c4c; color: #ff4c4c; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 20px; font-size: 0.9rem;">
+                {{ message }}
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <form action="/masuk" method="POST">
+                <div class="input-group">
+                    <label for="email">Alamat Email</label>
+                    <input type="email" id="email" name="email" placeholder="Masukkan alamat email Anda" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="password">Kata Sandi</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="password" name="password" placeholder="Masukkan kata sandi Anda"
+                            required>
+                        <i class="fa-solid fa-eye-slash toggle-password" id="togglePassword"></i>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit">Masuk</button>
+            </form>
+
+            <div class="divider"></div>
+
+            <div class="form-footer">
+                <a href="/lupa-kata-sandi">Lupa Kata Sandi?</a>
+                <a href="/daftar">Daftar Akun Baru</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='login.js') }}"></script>
+</body>
+
+</html>

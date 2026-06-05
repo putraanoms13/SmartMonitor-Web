@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartGlasses Log - SmartMonitor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-database-compat.js"></script>
+
+    <style>
+        body,
+        .glasses-container {
+            background: linear-gradient(135deg, #e0f2fe 0%, #bfdbfe 100%) !important;
+            color: #1e293b !important;
+            background-attachment: fixed !important;
+            margin: 0;
+        }
+
+        .top-nav {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 70px !important;
+            z-index: 1002 !important;
+            box-sizing: border-box;
+            background-color: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(15px) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.5) !important;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 25px !important;
+        }
+
+        .glasses-container {
+            padding-top: 100px !important;
+            padding-left: 5%;
+            padding-right: 5%;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        .sidebar {
+            background-color: rgba(255, 255, 255, 0.8) !important;
+            backdrop-filter: blur(15px) !important;
+            border-right: 1px solid rgba(255, 255, 255, 0.5) !important;
+            z-index: 1001 !important;
+            top: 70px !important;
+            height: calc(100vh - 70px) !important;
+            padding-bottom: 20px !important;
+            overflow-y: auto !important;
+            box-sizing: border-box;
+        }
+
+        .sidebar-overlay {
+            z-index: 1000 !important;
+        }
+
+        .close-btn {
+            display: none !important;
+        }
+
+        .sidebar-header {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+        }
+
+        .inst-name,
+        .profile-name,
+        .page-title h1,
+        .section-header h2 {
+            color: #1e293b !important;
+        }
+
+        .page-title p,
+        .curr-desc,
+        .curr-time,
+        .x-label,
+        .trend-footer p {
+            color: #64748b !important;
+        }
+
+        .menu-icon {
+            color: #2563eb !important;
+            cursor: pointer;
+        }
+
+        .profile-pic {
+            background-color: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        .profile-pic img {
+            background-color: transparent !important;
+            object-fit: contain !important;
+        }
+
+        .nav-link {
+            color: #64748b !important;
+            font-weight: 500 !important;
+        }
+
+        .nav-link:hover {
+            background-color: rgba(37, 99, 235, 0.1) !important;
+            color: #2563eb !important;
+        }
+
+        .nav-link.active {
+            background-color: rgba(37, 99, 235, 0.1) !important;
+            color: #2563eb !important;
+            border-left: 4px solid #2563eb !important;
+        }
+
+        .btn-keluar {
+            color: #ef4444 !important;
+            font-weight: 500 !important;
+        }
+
+        .btn-keluar:hover {
+            background-color: rgba(239, 68, 68, 0.1) !important;
+        }
+
+        .btn-back {
+            background-color: #ffffff !important;
+            color: #334155 !important;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn-back:hover {
+            background-color: #f8fafc !important;
+        }
+
+        /* DROPDOWN NETWORK BANDWIDTH */
+        .network-badge {
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #475569;
+            box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .ping-dot {
+            color: #10b981;
+            animation: pulseLive 2s infinite;
+            display: inline-block;
+        }
+
+        @keyframes pulseLive {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .network-wrapper {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+            margin-right: 15px;
+        }
+
+        .network-dropdown {
+            position: absolute;
+            top: 140%;
+            right: 0;
+            width: 320px;
+            background-color: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(20px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(15, 23, 42, 0.1);
+            padding: 20px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 1005;
+            cursor: default;
+        }
+
+        .network-wrapper:hover .network-dropdown {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .net-drop-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+
+        .net-drop-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .net-drop-box {
+            background: rgba(241, 245, 249, 0.6);
+            padding: 12px;
+            border-radius: 12px;
+        }
+
+        .net-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .net-value {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #1e293b;
+        }
+
+        .net-value small {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #94a3b8;
+        }
+
+        .text-blue-gradient {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: transparent;
+        }
+
+        .text-green-gradient {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: transparent;
+        }
+
+        .progress-section {
+            margin-top: 10px;
+        }
+
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #475569;
+            margin-bottom: 8px;
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            height: 10px;
+            background: rgba(226, 232, 240, 0.8);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #3b82f6);
+            border-radius: 10px;
+            transition: width 0.5s ease-out;
+        }
+
+        @media (max-width: 768px) {
+            .network-wrapper {
+                display: none;
+            }
+
+            .nav-right span {
+                display: none;
+            }
+        }
+
+        .status-bar,
+        .stat-card,
+        .curr-card,
+        .trend-card,
+        .camera-card {
+            background-color: rgba(255, 255, 255, 0.85) !important;
+            backdrop-filter: blur(10px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            border-radius: 24px !important;
+            box-shadow: 0 8px 32px rgba(15, 23, 42, 0.05) !important;
+        }
+
+        .status-bar {
+            display: flex !important;
+            flex-direction: row !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            padding: 15px 25px !important;
+            margin-bottom: 30px !important;
+            width: 100% !important;
+            box-sizing: border-box;
+        }
+
+        .status-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            color: #1e293b;
+            white-space: nowrap;
+        }
+
+        .status-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #64748b;
+            white-space: nowrap;
+        }
+
+        .text-green {
+            color: #10b981 !important;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 25px;
+        }
+
+        .btn-export {
+            background: white;
+            border: 1px solid #cbd5e1;
+            color: #334155;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-family: 'Poppins';
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn-export:hover {
+            background: #f8fafc;
+            border-color: #94a3b8;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            padding: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card.blue {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+            border: none !important;
+            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3) !important;
+            color: white !important;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: #64748b;
+            margin-bottom: 10px;
+            display: block;
+            text-transform: uppercase;
+        }
+
+        .stat-card.blue .stat-label {
+            color: #dbeafe !important;
+        }
+
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+            color: #1e293b;
+        }
+
+        .stat-card.blue .stat-value {
+            color: #ffffff !important;
+        }
+
+        .stat-trend {
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .stat-trend.up {
+            color: #10b981;
+        }
+
+        .stat-card.blue .stat-trend {
+            color: #ffffff !important;
+        }
+
+        .stat-icon-bg {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 2.5rem;
+            color: #f1f5f9;
+            opacity: 0.8;
+        }
+
+        .stat-card.blue .stat-icon-bg {
+            color: rgba(255, 255, 255, 0.2) !important;
+        }
+
+        .camera-card {
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 30px;
+        }
+
+        .camera-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .live-badge {
+            background-color: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            animation: pulseLive 2s infinite;
+        }
+
+        .video-container {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            max-height: 550px;
+            min-height: 300px;
+            border-radius: 16px;
+            overflow: hidden;
+            background-color: #0f172a;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
+        }
+
+        #camera-stream {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 2;
+        }
+
+        .overlay-text {
+            color: #94a3b8;
+            font-weight: 500;
+            z-index: 1;
+            font-size: 0.95rem;
+            text-align: center;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 46px;
+            height: 24px;
+            margin-left: 10px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #cbd5e1;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        input:checked+.slider {
+            background-color: #10b981;
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(22px);
+        }
+
+        .bottom-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 1024px) {
+            .bottom-wrapper {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .link-see-all {
+            color: #2563eb;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .currency-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .currency-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .curr-card {
+            padding: 20px;
+            display: flex;
+            gap: 15px;
+            position: relative;
+            transition: transform 0.3s;
+        }
+
+        .curr-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(37, 99, 235, 0.1) !important;
+            border-color: rgba(37, 99, 235, 0.3) !important;
+        }
+
+        .curr-img-box {
+            width: 65px;
+            height: 65px;
+            background: rgba(37, 99, 235, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #2563eb;
+            position: relative;
+            font-size: 1.3rem;
+            flex-shrink: 0;
+        }
+
+        .cam-label {
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            background: #1e293b;
+            color: white;
+            font-size: 0.55rem;
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-weight: 700;
+        }
+
+        .curr-info {
+            flex: 1;
+        }
+
+        .curr-amount {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin: 0 0 5px 0;
+        }
+
+        .badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .badge-green {
+            background: rgba(16, 185, 129, 0.1);
+            color: #059669;
+        }
+
+        .badge-orange {
+            background: rgba(245, 158, 11, 0.1);
+            color: #d97706;
+        }
+
+        .trend-card {
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .chart-container {
+            flex: 1;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            padding: 20px 0 10px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            margin-bottom: 15px;
+            gap: 10px;
+            min-height: 180px;
+        }
+
+        .bar-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            height: 100%;
+            gap: 10px;
+        }
+
+        .bar {
+            width: 100%;
+            max-width: 30px;
+            background: #e2e8f0;
+            border-radius: 6px 6px 0 0;
+            transition: height 0.5s;
+        }
+
+        .bar.active {
+            background: #2563eb;
+            box-shadow: 0 0 15px rgba(37, 99, 235, 0.3);
+        }
+
+        .x-label.active {
+            color: #1e293b;
+            font-weight: 800;
+        }
+
+        .trend-footer {
+            margin-top: auto;
+        }
+
+        .trend-footer h3 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="top-nav">
+        <div class="nav-left" style="display: flex; align-items: center; gap: 15px;">
+            <i class="fa-solid fa-bars menu-icon" id="menu-toggle"></i>
+            <a href="/dashboard" class="btn-back"
+                style="padding: 8px 15px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: background 0.2s;"><i
+                    class="fa-solid fa-arrow-left"></i> Kembali</a>
+        </div>
+        <div class="nav-right" style="display: flex; align-items: center; gap: 12px;">
+
+            <div class="network-wrapper">
+                <div class="network-badge">
+                    <i class="fa-solid fa-wifi ping-dot"></i> <span id="nav-ping">42ms</span>
+                    <span style="color: #cbd5e1;">|</span>
+                    <span style="color: #10b981;"><i class="fa-solid fa-arrow-down" style="font-size: 0.7rem;"></i>
+                        <span id="nav-dl">0.0</span></span>
+                    <span style="color: #2563eb;"><i class="fa-solid fa-arrow-up" style="font-size: 0.7rem;"></i> <span
+                            id="nav-ul">0.0</span> Mbps</span>
+                </div>
+                <div class="network-dropdown">
+                    <div class="net-drop-title"><i class="fa-solid fa-network-wired" style="color: #10b981;"></i> Detail
+                        Bandwidth</div>
+                    <div class="net-drop-grid">
+                        <div class="net-drop-box"><span class="net-label">Kapasitas</span>
+                            <div class="net-value">20.0 <small>Mbps</small></div>
+                        </div>
+                        <div class="net-drop-box"><span class="net-label">Konsumsi</span>
+                            <div class="net-value text-blue-gradient" id="drop-throughput">0.0 <small>Mbps</small></div>
+                        </div>
+                    </div>
+                    <div class="net-drop-box" style="margin-bottom: 15px;"><span class="net-label">Total Data Sesi
+                            Ini</span>
+                        <div class="net-value text-green-gradient" style="font-size: 1.6rem;" id="drop-total-data">0.0
+                            <small>MB</small></div>
+                    </div>
+                    <div class="progress-section">
+                        <div class="progress-labels"><span>Beban Jaringan</span><span id="drop-net-load-pct">0%</span>
+                        </div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" id="drop-net-load-bar" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <img src="{{ url_for('static', filename='polines.png') }}" alt="Logo Polines"
+                style="height: 32px; width: auto; object-fit: contain;">
+            <span
+                style="font-family: 'Poppins', sans-serif; font-size: 1rem; font-weight: 700; color: #1e293b; text-transform: uppercase; letter-spacing: 0.5px;">POLITEKNIK
+                NEGERI SEMARANG | Smart Monitor</span>
+            <i class="fa-solid fa-person-walking-with-cane"
+                style="color: #2563eb; font-size: 1.5rem; margin-left: 5px;"></i>
+        </div>
+    </header>
+
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="profile-pic">
+                <img src="{{ url_for('static', filename='uploads/' + user.foto_profil) if user and user.foto_profil != 'polines.png' else url_for('static', filename='polines.png') }}"
+                    alt="Profile" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+            <span class="profile-name">{{ session.get('nama', 'Options') }}</span>
+        </div>
+        <div class="sidebar-links">
+            <a href="/dashboard" class="nav-link"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+            <a href="/pengaturan" class="nav-link"><i class="fa-solid fa-gear"></i> Pengaturan</a>
+            <a href="/keluar" class="btn-keluar" style="margin-top: auto;"><i
+                    class="fa-solid fa-right-from-bracket"></i> Keluar</a>
+        </div>
+    </nav>
+    <div class="sidebar-overlay" id="overlay"></div>
+
+    <main class="glasses-container">
+        <div class="status-bar">
+            <div class="status-left"><i class="fa-solid fa-glasses" style="color: #2563eb;"></i> Kacamata Pintar</div>
+            <div class="status-right"><span class="text-green"><i class="fa-solid fa-wifi"></i> <span
+                        id="status-koneksi">Menghubungkan...</span></span><span class="text-green"><i
+                        class="fa-solid fa-battery-full"></i> <span id="nilai-baterai">Memuat...</span></span></div>
+        </div>
+
+        <div class="page-header">
+            <div class="page-title">
+                <h1>Riwayat Deteksi Mata Uang</h1>
+                <p>Pantauan uang kertas terbaru dan Live Stream Kacamata Pintar.</p>
+            </div><button class="btn-export"><i class="fa-solid fa-download"></i> Ekspor Log</button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card"><span class="stat-label">Total Terdeteksi Hari Ini</span>
+                <div class="stat-value">Rp 2.175.000</div>
+                <div class="stat-trend up"><i class="fa-solid fa-arrow-trend-up"></i> +5% dari kemarin</div><i
+                    class="fa-regular fa-calendar stat-icon-bg"></i>
+            </div>
+            <div class="stat-card"><span class="stat-label">Total Terdeteksi Minggu Ini</span>
+                <div class="stat-value">Rp 4.800.000</div>
+                <div class="stat-trend up"><i class="fa-solid fa-arrow-trend-up"></i> +12% dari minggu lalu</div><i
+                    class="fa-solid fa-calendar-week stat-icon-bg"></i>
+            </div>
+            <div class="stat-card blue"><span class="stat-label">Rata-Rata Akurasi</span>
+                <div class="stat-value">98%</div>
+                <div class="stat-trend"><i class="fa-solid fa-circle-check"></i> Akurasi tinggi terjaga</div><i
+                    class="fa-solid fa-crosshairs stat-icon-bg"></i>
+            </div>
+        </div>
+
+        <div class="camera-card">
+            <div class="camera-header">
+                <h2 style="font-size: 1.2rem; margin: 0; color: #1e293b; display: flex; align-items: center;"><i
+                        class="fa-solid fa-video" style="color: #2563eb; margin-right: 8px;"></i> Live Stream Camera
+                </h2>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div class="live-badge" id="badge-live" style="display: none;"><i class="fa-solid fa-circle"></i>
+                        LIVE</div><label class="switch"><input type="checkbox" id="cam-toggle"
+                            onchange="toggleCamera()"><span class="slider"></span></label>
+                </div>
+            </div>
+            <div class="video-container"><img id="camera-stream" src="" alt="Live Stream ESP32-CAM"
+                    style="display: none;">
+                <div class="overlay-text" id="kamera-status"><i class="fa-solid fa-power-off"
+                        style="font-size: 2.5rem; margin-bottom: 10px; color: #475569;"></i><br>Kamera Saat Ini
+                    Dimatikan</div>
+            </div>
+        </div>
+
+        <div class="bottom-wrapper">
+            <div class="trend-card">
+                <h2 style="font-size: 1.2rem; margin: 0 0 20px 0; color: #1e293b;">Tren Mingguan</h2>
+                <div class="chart-container">
+                    <div class="bar-col">
+                        <div class="bar" style="height: 40%;"></div><span class="x-label">S</span>
+                    </div>
+                    <div class="bar-col">
+                        <div class="bar" style="height: 60%;"></div><span class="x-label">S</span>
+                    </div>
+                    <div class="bar-col">
+                        <div class="bar" style="height: 30%;"></div><span class="x-label">R</span>
+                    </div>
+                    <div class="bar-col">
+                        <div class="bar" style="height: 80%;"></div><span class="x-label">K</span>
+                    </div>
+                    <div class="bar-col">
+                        <div class="bar active" style="height: 100%;"></div><span class="x-label active">J</span>
+                    </div>
+                    <div class="bar-col">
+                        <div class="bar" style="height: 50%;"></div><span class="x-label">S</span>
+                    </div>
+                    <div class="bar-col">
+                        <div class="bar" style="height: 70%;"></div><span class="x-label">M</span>
+                    </div>
+                </div>
+                <div class="trend-footer">
+                    <p>Total terdeteksi minggu ini</p>
+                    <h3>Rp 5.175.000</h3>
+                </div>
+            </div>
+
+            <div class="currency-section">
+                <div class="section-header">
+                    <h2 style="font-size: 1.2rem; margin: 0; color: #1e293b;">Uang Kertas Terkini</h2><a href="#"
+                        class="link-see-all">Lihat Semua</a>
+                </div>
+                <div class="currency-grid">
+                    <div class="curr-card">
+                        <div class="curr-img-box"><span class="cam-label">Cam 1</span><i
+                                class="fa-solid fa-money-bill-wave"></i></div>
+                        <div class="curr-info">
+                            <h3 class="curr-amount">Rp 100.000</h3>
+                            <p class="curr-desc" style="margin:0; font-size:0.75rem;">Hari ini, 10:42</p>
+                        </div>
+                        <div class="badge badge-green"><i class="fa-solid fa-check"></i> 99%</div>
+                    </div>
+                    <div class="curr-card">
+                        <div class="curr-img-box"><span class="cam-label">Cam 1</span><i
+                                class="fa-solid fa-money-bill-wave"></i></div>
+                        <div class="curr-info">
+                            <h3 class="curr-amount">Rp 50.000</h3>
+                            <p class="curr-desc" style="margin:0; font-size:0.75rem;">Hari ini, 09:15</p>
+                        </div>
+                        <div class="badge badge-green"><i class="fa-solid fa-check"></i> 97%</div>
+                    </div>
+                    <div class="curr-card">
+                        <div class="curr-img-box"><i class="fa-solid fa-money-bill-wave"></i></div>
+                        <div class="curr-info">
+                            <h3 class="curr-amount">Rp 20.000</h3>
+                            <p class="curr-desc" style="margin:0; font-size:0.75rem;">Kemarin, 16:30</p>
+                        </div>
+                        <div class="badge badge-orange"><i class="fa-solid fa-triangle-exclamation"></i> 85%</div>
+                    </div>
+                    <div class="curr-card">
+                        <div class="curr-img-box"><i class="fa-solid fa-money-bill-wave"></i></div>
+                        <div class="curr-info">
+                            <h3 class="curr-amount">Rp 10.000</h3>
+                            <p class="curr-desc" style="margin:0; font-size:0.75rem;">Kemarin, 14:10</p>
+                        </div>
+                        <div class="badge badge-green"><i class="fa-solid fa-check"></i> 96%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+        function toggleSidebar() { sidebar.classList.toggle('active'); overlay.classList.toggle('active'); }
+        menuToggle.addEventListener('click', toggleSidebar);
+        overlay.addEventListener('click', toggleSidebar);
+
+        const mqtt_broker = "broker.hivemq.com";
+        const mqtt_port = 8000;
+        const client_id = "WebDashboard_Glasses_" + Math.random().toString(16).substr(2, 8);
+        const topic_baterai = "smartcane/kevin/baterai";
+        const topic_perintah_kamera = "smartglasses/kevin/kamera";
+
+        const mqttClient = new Paho.MQTT.Client(mqtt_broker, mqtt_port, client_id);
+
+        mqttClient.onConnectionLost = function (responseObject) {
+            if (responseObject.errorCode !== 0) { document.getElementById("status-koneksi").innerHTML = "Terputus"; setTimeout(koneksiMQTT, 3000); }
+        };
+
+        mqttClient.onMessageArrived = function (message) {
+            if (message.destinationName === topic_baterai) {
+                let persentase = parseInt(message.payloadString);
+                document.getElementById("nilai-baterai").innerHTML = persentase + "%";
+            }
+        };
+
+        function koneksiMQTT() {
+            let options = {
+                timeout: 3,
+                onSuccess: function () { document.getElementById("status-koneksi").innerHTML = "Terhubung"; mqttClient.subscribe(topic_baterai); },
+                onFailure: function () { document.getElementById("status-koneksi").innerHTML = "Gagal Konek"; setTimeout(koneksiMQTT, 3000); }
+            };
+            mqttClient.connect(options);
+        }
+        window.onload = koneksiMQTT;
+
+        let totalDataGunakan = 0;
+        const maxBandwidth = 20.0;
+
+        function updateBandwidthStats() {
+            const ping = Math.floor(Math.random() * (55 - 25 + 1)) + 25;
+            const isCamOn = document.getElementById('cam-toggle') && document.getElementById('cam-toggle').checked;
+
+            let downloadSpeed, uploadSpeed;
+            if (isCamOn) { downloadSpeed = (Math.random() * (4.5 - 2.5) + 2.5).toFixed(2); uploadSpeed = (Math.random() * (1.5 - 0.5) + 0.5).toFixed(2); }
+            else { downloadSpeed = (Math.random() * (1.5 - 0.2) + 0.2).toFixed(2); uploadSpeed = (Math.random() * (0.8 - 0.1) + 0.1).toFixed(2); }
+
+            const currentThroughput = (parseFloat(downloadSpeed) + parseFloat(uploadSpeed)).toFixed(2);
+            const loadPercent = Math.round((currentThroughput / maxBandwidth) * 100);
+            totalDataGunakan += (currentThroughput / 8) * 2;
+
+            document.getElementById('nav-ping').innerText = ping + "ms";
+            document.getElementById('nav-dl').innerText = downloadSpeed;
+            document.getElementById('nav-ul').innerText = uploadSpeed;
+
+            if (document.getElementById('drop-throughput')) {
+                document.getElementById('drop-throughput').innerHTML = currentThroughput + " <small>Mbps</small>";
+                document.getElementById('drop-total-data').innerHTML = totalDataGunakan.toFixed(2) + " <small>MB</small>";
+                document.getElementById('drop-net-load-pct').innerText = loadPercent + "%";
+                const barFill = document.getElementById('drop-net-load-bar');
+                barFill.style.width = loadPercent + "%";
+                if (loadPercent > 75) { barFill.style.background = "linear-gradient(90deg, #f59e0b, #ef4444)"; }
+                else { barFill.style.background = "linear-gradient(90deg, #10b981, #3b82f6)"; }
+            }
+        }
+        setInterval(updateBandwidthStats, 2000);
+        updateBandwidthStats();
+
+        const ESP32_CAM_IP = "10.38.196.76";
+        const streamUrl = `http://${ESP32_CAM_IP}:81/stream`;
+
+        const camImage = document.getElementById('camera-stream');
+        const statusText = document.getElementById('kamera-status');
+        const badgeLive = document.getElementById('badge-live');
+
+        function toggleCamera() {
+            const isChecked = document.getElementById('cam-toggle').checked;
+            if (isChecked) {
+                statusText.innerHTML = "<i class='fa-solid fa-spinner fa-spin' style='font-size: 2.5rem; margin-bottom: 10px; color: #2563eb;'></i><br>Menghubungkan ke SmartGlasses...";
+                camImage.src = streamUrl;
+                camImage.onload = function () { camImage.style.display = 'block'; statusText.style.display = 'none'; badgeLive.style.display = 'flex'; };
+                camImage.onerror = function () { statusText.innerHTML = "<i class='fa-solid fa-triangle-exclamation' style='font-size: 2.5rem; margin-bottom: 10px; color: #ef4444;'></i><br>Gagal terhubung ke IP Kamera. Pastikan satu jaringan."; document.getElementById('cam-toggle').checked = false; camImage.src = ""; };
+                if (mqttClient.isConnected()) { mqttClient.send(topic_perintah_kamera, "ON"); }
+            } else {
+                camImage.src = ""; camImage.style.display = 'none'; statusText.style.display = 'block'; statusText.innerHTML = "<i class='fa-solid fa-power-off' style='font-size: 2.5rem; margin-bottom: 10px; color: #475569;'></i><br>Kamera Dimatikan"; badgeLive.style.display = 'none';
+                if (mqttClient.isConnected()) { mqttClient.send(topic_perintah_kamera, "OFF"); }
+            }
+        }
+    </script>
+</body>
+
+</html>

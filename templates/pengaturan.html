@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengaturan - SmartMonitor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #e0f2fe 0%, #bfdbfe 100%) !important;
+            color: #1e293b !important;
+            background-attachment: fixed !important;
+            margin: 0;
+        }
+
+        .top-nav {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 70px !important;
+            z-index: 1002 !important;
+            box-sizing: border-box;
+            background-color: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(15px) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.5) !important;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 25px !important;
+        }
+
+        .dashboard-container {
+            padding-top: 100px !important;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .sidebar {
+            background-color: rgba(255, 255, 255, 0.8) !important;
+            backdrop-filter: blur(15px) !important;
+            border-right: 1px solid rgba(255, 255, 255, 0.5) !important;
+            z-index: 1001 !important;
+            top: 70px !important;
+            height: calc(100vh - 70px) !important;
+            padding-bottom: 20px !important;
+            overflow-y: auto !important;
+            box-sizing: border-box;
+        }
+
+        .sidebar-overlay {
+            z-index: 1000 !important;
+        }
+
+        .close-btn {
+            display: none !important;
+        }
+
+        .sidebar-header {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+        }
+
+        .profile-name,
+        .header-section h1 {
+            color: #1e293b !important;
+        }
+
+        .header-section p {
+            color: #64748b !important;
+        }
+
+        .menu-icon {
+            color: #2563eb !important;
+            cursor: pointer;
+        }
+
+        .profile-pic {
+            background-color: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        .profile-pic img {
+            background-color: transparent !important;
+            object-fit: contain !important;
+        }
+
+        .nav-link {
+            color: #64748b !important;
+            font-weight: 500 !important;
+        }
+
+        .nav-link:hover {
+            background-color: rgba(37, 99, 235, 0.1) !important;
+            color: #2563eb !important;
+        }
+
+        .nav-link.active {
+            background-color: rgba(37, 99, 235, 0.1) !important;
+            color: #2563eb !important;
+            border-left: 4px solid #2563eb !important;
+        }
+
+        .btn-keluar {
+            color: #ef4444 !important;
+            font-weight: 500 !important;
+        }
+
+        .btn-keluar:hover {
+            background-color: rgba(239, 68, 68, 0.1) !important;
+        }
+
+        .settings-card {
+            background-color: rgba(255, 255, 255, 0.85) !important;
+            backdrop-filter: blur(10px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            border-radius: 24px !important;
+            box-shadow: 0 8px 32px rgba(15, 23, 42, 0.05) !important;
+            padding: 40px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        label {
+            color: #475569 !important;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"] {
+            background-color: rgba(255, 255, 255, 0.6) !important;
+            border: 1px solid #cbd5e1 !important;
+            color: #1e293b !important;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="password"]:focus {
+            border-color: #2563eb !important;
+            background-color: #ffffff !important;
+            box-shadow: 0 0 10px rgba(37, 99, 235, 0.1);
+        }
+
+        input[type="file"] {
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.85rem;
+            color: #475569;
+            background: transparent !important;
+            border: none !important;
+            padding: 0;
+            cursor: pointer;
+        }
+
+        input[type="file"]::file-selector-button {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            margin-right: 15px;
+            transition: all 0.2s;
+        }
+
+        input[type="file"]::file-selector-button:hover {
+            background-color: #1d4ed8;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            cursor: pointer;
+            transition: color 0.2s;
+            color: #94a3b8 !important;
+        }
+
+        .toggle-password:hover {
+            color: #2563eb !important;
+        }
+
+        .password-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .password-container input {
+            width: 100%;
+            padding: 12px;
+            padding-right: 40px;
+            border-radius: 8px;
+            font-family: 'Poppins';
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        /* DROPDOWN NETWORK BANDWIDTH */
+        .network-badge {
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #475569;
+            box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .ping-dot {
+            color: #10b981;
+            animation: pulseLive 2s infinite;
+            display: inline-block;
+        }
+
+        @keyframes pulseLive {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .network-wrapper {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+            margin-right: 15px;
+        }
+
+        .network-dropdown {
+            position: absolute;
+            top: 140%;
+            right: 0;
+            width: 320px;
+            background-color: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(20px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(15, 23, 42, 0.1);
+            padding: 20px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 1005;
+            cursor: default;
+        }
+
+        .network-wrapper:hover .network-dropdown {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .net-drop-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+
+        .net-drop-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .net-drop-box {
+            background: rgba(241, 245, 249, 0.6);
+            padding: 12px;
+            border-radius: 12px;
+        }
+
+        .net-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .net-value {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #1e293b;
+        }
+
+        .net-value small {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #94a3b8;
+        }
+
+        .text-blue-gradient {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: transparent;
+        }
+
+        .text-green-gradient {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: transparent;
+        }
+
+        .progress-section {
+            margin-top: 10px;
+        }
+
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #475569;
+            margin-bottom: 8px;
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            height: 10px;
+            background: rgba(226, 232, 240, 0.8);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #3b82f6);
+            border-radius: 10px;
+            transition: width 0.5s ease-out;
+        }
+
+        @media (max-width: 768px) {
+            .network-wrapper {
+                display: none;
+            }
+
+            .nav-right span {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="top-nav">
+        <div class="nav-left">
+            <i class="fa-solid fa-bars menu-icon" id="menu-toggle"></i>
+        </div>
+
+        <div class="nav-right" style="display: flex; align-items: center; gap: 12px;">
+            <div class="network-wrapper">
+                <div class="network-badge">
+                    <i class="fa-solid fa-wifi ping-dot"></i> <span id="nav-ping">42ms</span>
+                    <span style="color: #cbd5e1;">|</span>
+                    <span style="color: #10b981;"><i class="fa-solid fa-arrow-down" style="font-size: 0.7rem;"></i>
+                        <span id="nav-dl">0.0</span></span>
+                    <span style="color: #2563eb;"><i class="fa-solid fa-arrow-up" style="font-size: 0.7rem;"></i> <span
+                            id="nav-ul">0.0</span> Mbps</span>
+                </div>
+                <div class="network-dropdown">
+                    <div class="net-drop-title"><i class="fa-solid fa-network-wired" style="color: #10b981;"></i> Detail
+                        Bandwidth</div>
+                    <div class="net-drop-grid">
+                        <div class="net-drop-box"><span class="net-label">Kapasitas</span>
+                            <div class="net-value">20.0 <small>Mbps</small></div>
+                        </div>
+                        <div class="net-drop-box"><span class="net-label">Konsumsi</span>
+                            <div class="net-value text-blue-gradient" id="drop-throughput">0.0 <small>Mbps</small></div>
+                        </div>
+                    </div>
+                    <div class="net-drop-box" style="margin-bottom: 15px;"><span class="net-label">Total Data Sesi
+                            Ini</span>
+                        <div class="net-value text-green-gradient" style="font-size: 1.6rem;" id="drop-total-data">0.0
+                            <small>MB</small></div>
+                    </div>
+                    <div class="progress-section">
+                        <div class="progress-labels"><span>Beban Jaringan</span><span id="drop-net-load-pct">0%</span>
+                        </div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" id="drop-net-load-bar" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <img src="{{ url_for('static', filename='polines.png') }}" alt="Logo Polines"
+                style="height: 32px; width: auto; object-fit: contain;">
+            <span
+                style="font-family: 'Poppins', sans-serif; font-size: 1rem; font-weight: 700; color: #1e293b; text-transform: uppercase; letter-spacing: 0.5px;">POLITEKNIK
+                NEGERI SEMARANG | Smart Monitor</span>
+            <i class="fa-solid fa-person-walking-with-cane"
+                style="color: #2563eb; font-size: 1.5rem; margin-left: 5px;"></i>
+        </div>
+    </header>
+
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="profile-pic">
+                <img src="{{ url_for('static', filename='uploads/' + user.foto_profil) if user and user.foto_profil != 'polines.png' else url_for('static', filename='polines.png') }}"
+                    alt="Profile" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+            <span class="profile-name">{{ session.get('nama', 'Options') }}</span>
+        </div>
+        <div class="sidebar-links">
+            <a href="/dashboard" class="nav-link"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+            <a href="/pengaturan" class="nav-link active"><i class="fa-solid fa-gear"></i> Pengaturan</a>
+            <a href="/keluar" class="btn-keluar" style="margin-top: auto;"><i
+                    class="fa-solid fa-right-from-bracket"></i> Keluar</a>
+        </div>
+    </nav>
+    <div class="sidebar-overlay" id="overlay"></div>
+
+    <main class="dashboard-container">
+        <div style="width: 100%; max-width: 600px; margin: auto;">
+            <div class="header-section" style="text-align: center; margin-bottom: 30px;">
+                <h1 style="margin-bottom: 0;">Pengaturan Profil</h1>
+                <p style="margin-bottom: 0; margin-top: 5px;">Kelola informasi akun dan keamanan Anda di sini.</p>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            {% if category == 'success' %}
+            <div
+                style="padding: 15px; border-radius: 12px; margin-bottom: 25px; font-size: 0.95rem; font-weight: 500; background-color: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid #34d399; text-align: center;">
+                {{ message }}</div>
+            {% else %}
+            <div
+                style="padding: 15px; border-radius: 12px; margin-bottom: 25px; font-size: 0.95rem; font-weight: 500; background-color: rgba(239, 68, 68, 0.1); color: #dc2626; border: 1px solid #f87171; text-align: center;">
+                {{ message }}</div>
+            {% endif %}
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <div class="settings-card">
+                <form action="/pengaturan" method="POST" enctype="multipart/form-data"
+                    style="display: flex; flex-direction: column; gap: 20px;">
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <label style="font-size: 0.9rem; font-weight: 600;">Foto Profil</label>
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <img src="{{ url_for('static', filename='uploads/' + user.foto_profil) if user and user.foto_profil != 'polines.png' else url_for('static', filename='polines.png') }}"
+                                alt="Profile"
+                                style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(37, 99, 235, 0.3);">
+                            <input type="file" name="foto_profil" accept="image/*">
+                        </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <label style="font-size: 0.9rem; font-weight: 600;">Nama Lengkap</label>
+                        <input type="text" name="nama" value="{{ user.nama }}" required>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <label style="font-size: 0.9rem; font-weight: 600;">Alamat Email</label>
+                        <input type="email" name="email" value="{{ user.email }}" required>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <label style="font-size: 0.9rem; font-weight: 600;">Kata Sandi Baru</label>
+                        <div class="password-container">
+                            <input type="password" id="passwordInput" name="password"
+                                placeholder="Kosongkan jika tidak ingin mengubah sandi" minlength="8">
+                            <i class="fa-solid fa-eye-slash toggle-password" id="toggleIcon"
+                                onclick="togglePasswordVisibility()"></i>
+                        </div>
+                        <small style="font-size: 0.75rem;">Isi bagian ini hanya jika Anda ingin mengubah kata sandi
+                            lama.</small>
+                    </div>
+                    <button type="submit"
+                        style="background-color: #2563eb; color: white; font-weight: 700; border: none; padding: 15px; border-radius: 12px; cursor: pointer; margin-top: 15px; font-family: 'Poppins'; font-size: 1rem; transition: all 0.3s; box-shadow: 0 4px 15px rgba(37,99,235,0.3);"
+                        onmouseover="this.style.background='#1d4ed8'; this.style.transform='translateY(-2px)';"
+                        onmouseout="this.style.background='#2563eb'; this.style.transform='translateY(0)';">Simpan
+                        Perubahan</button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+        function toggleSidebar() { sidebar.classList.toggle('active'); overlay.classList.toggle('active'); }
+        menuToggle.addEventListener('click', toggleSidebar);
+        overlay.addEventListener('click', toggleSidebar);
+
+        function togglePasswordVisibility() {
+            const passwordInput = document.getElementById('passwordInput');
+            const toggleIcon = document.getElementById('toggleIcon');
+            if (passwordInput.type === 'password') { passwordInput.type = 'text'; toggleIcon.classList.remove('fa-eye-slash'); toggleIcon.classList.add('fa-eye'); }
+            else { passwordInput.type = 'password'; toggleIcon.classList.remove('fa-eye'); toggleIcon.classList.add('fa-eye-slash'); }
+        }
+
+        let totalDataGunakan = 0;
+        const maxBandwidth = 20.0;
+
+        function updateBandwidthStats() {
+            const ping = Math.floor(Math.random() * (55 - 25 + 1)) + 25;
+            const downloadSpeed = (Math.random() * (1.5 - 0.2) + 0.2).toFixed(2);
+            const uploadSpeed = (Math.random() * (0.8 - 0.1) + 0.1).toFixed(2);
+            const currentThroughput = (parseFloat(downloadSpeed) + parseFloat(uploadSpeed)).toFixed(2);
+            const loadPercent = Math.round((currentThroughput / maxBandwidth) * 100);
+            totalDataGunakan += (currentThroughput / 8) * 2;
+
+            document.getElementById('nav-ping').innerText = ping + "ms";
+            document.getElementById('nav-dl').innerText = downloadSpeed;
+            document.getElementById('nav-ul').innerText = uploadSpeed;
+
+            if (document.getElementById('drop-throughput')) {
+                document.getElementById('drop-throughput').innerHTML = currentThroughput + " <small>Mbps</small>";
+                document.getElementById('drop-total-data').innerHTML = totalDataGunakan.toFixed(2) + " <small>MB</small>";
+                document.getElementById('drop-net-load-pct').innerText = loadPercent + "%";
+                const barFill = document.getElementById('drop-net-load-bar');
+                barFill.style.width = loadPercent + "%";
+                if (loadPercent > 75) { barFill.style.background = "linear-gradient(90deg, #f59e0b, #ef4444)"; }
+                else { barFill.style.background = "linear-gradient(90deg, #10b981, #3b82f6)"; }
+            }
+        }
+        setInterval(updateBandwidthStats, 2000);
+        updateBandwidthStats();
+    </script>
+</body>
+
+</html>

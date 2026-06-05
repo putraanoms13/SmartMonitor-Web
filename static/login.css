@@ -1,0 +1,182 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    background-color: #1e293b;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Navigasi Atas */
+.navbar {
+    display: flex;
+    align-items: center;
+    padding: 20px 30px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.3rem;
+    font-weight: 800;
+}
+
+/* Penempatan Kotak Tengah */
+.login-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+/* Desain Kartu Login (Garis Kuning) */
+.login-card {
+    background-color: transparent;
+    border: 1px solid #fae115;
+    border-radius: 12px;
+    padding: 40px;
+    width: 100%;
+    max-width: 420px;
+}
+
+.form-title {
+    text-align: center;
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin-bottom: 35px;
+    line-height: 1.3;
+}
+
+/* Kolom Input */
+.input-group {
+    margin-bottom: 25px;
+    display: flex;
+    flex-direction: column;
+}
+
+.input-group label {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.input-group input {
+    background-color: #0f172a; /* Warna latar dalam kolom yang sangat gelap */
+    border: 1px solid #333;
+    color: white;
+    padding: 15px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.input-group input:focus {
+    border-color: #fae115; /* Kolom jadi kuning saat diklik */
+}
+
+.input-group input::placeholder {
+    color: #666;
+    font-weight: 400;
+}
+
+/* Pembungkus Password & Ikon Mata */
+.password-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-wrapper input {
+    width: 100%;
+    padding-right: 45px;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 15px;
+    color: #888;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: color 0.3s;
+}
+
+.toggle-password:hover {
+    color: white;
+}
+
+/* Tombol Masuk */
+.btn-submit {
+    width: 100%;
+    background-color: #fae115;
+    color: black;
+    font-weight: 800;
+    font-size: 1.1rem;
+    padding: 15px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 5px;
+    transition: transform 0.1s, background-color 0.3s;
+}
+
+.btn-submit:active {
+    transform: scale(0.97);
+}
+
+.btn-submit:hover {
+    background-color: #e5cd12;
+}
+
+/* Garis Pembatas dan Link Bawah */
+.divider {
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.15);
+    margin: 30px 0 20px 0;
+}
+
+.form-footer {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.form-footer a {
+    color: white;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.form-footer a:hover {
+    color: #fae115;
+}
+
+/* --- TAMBAHAN UNTUK HALAMAN DAFTAR --- */
+.register-footer {
+    text-align: center;
+    margin-top: 30px;
+    font-size: 0.95rem;
+    color: #e5e7eb;
+}
+
+.register-footer a {
+    color: #fae115; /* Warna kuning */
+    font-weight: 700;
+    text-decoration: underline; /* Garis bawah pada teks Masuk */
+    text-underline-offset: 4px;
+    transition: opacity 0.3s;
+}
+
+.register-footer a:hover {
+    opacity: 0.8;
+}

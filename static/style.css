@@ -1,0 +1,320 @@
+/* Reset dasar dan set font */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Background dan tata letak utama */
+body {
+    background-color: #1e293b;
+    /* Warna biru dongker sangat gelap */
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    overflow: hidden;
+    position: relative;
+}
+
+.container {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 10;
+}
+
+/* Wadah foto (lingkaran) */
+.logo-container {
+    width: 125px;
+    height: 125px;
+    background-color: transparent;
+    /* Ubah jadi transparan agar foto terlihat */
+    border-radius: 50%;
+    /* Membuat lingkaran sempurna */
+    overflow: hidden;
+    /* Memotong gambar yang melebihi lingkaran */
+    margin: 0 auto 20px auto;
+    /* Menengahkan dan memberi jarak ke bawah */
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+    /* Pertahankan bayangan agar terlihat bersinar */
+    border: 2px solid white;
+    /* Tambahkan bingkai putih tipis agar rapi */
+    display: flex;
+    /* Untuk menengahkan gambar secara vertikal & horizontal */
+    justify-content: center;
+    align-items: center;
+}
+
+/* Gaya untuk gambar itu sendiri di dalam wadah */
+.logo-container img {
+    width: 95%;
+    height: 95%;
+    object-fit: cover;
+    /* Memastikan gambar tidak gepeng, terpotong rapi dalam lingkaran */
+    border-radius: 50%;
+    /* Opsional, untuk memastikan di beberapa browser lama */
+}
+
+/* Teks SmartMonitor */
+.title {
+    font-size: 4.5rem;
+    font-weight: 900;
+    /* Super tebal */
+    letter-spacing: -2px;
+    margin-bottom: 10px;
+}
+
+/* Teks Monitoring Real-time... */
+.subtitle {
+    font-size: 1.1rem;
+    font-weight: 400;
+    letter-spacing: 1.5px;
+    color: #e5e7eb;
+    margin-bottom: 55px;
+}
+
+/* Wadah Tombol */
+.button-group {
+    display: flex;
+    gap: 25px;
+}
+
+/* Gaya Dasar Tombol */
+.btn {
+    padding: 16px 45px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border-radius: 50px;
+    /* Bentuk pil */
+    cursor: pointer;
+    /* Efek transisi halus saat dihover atau ditekan */
+    transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    letter-spacing: 1px;
+    border: none;
+    outline: none;
+}
+
+/* Tombol MASUK (Kuning) */
+.btn-primary {
+    background-color: #fae115;
+    color: #000;
+    box-shadow: 0 0 35px rgba(250, 225, 21, 0.4);
+    /* Efek glow */
+}
+
+.btn-primary:hover {
+    box-shadow: 0 0 50px rgba(250, 225, 21, 0.7);
+}
+
+/* Tombol DAFTAR (Transparan) */
+.btn-secondary {
+    background-color: transparent;
+    color: white;
+    border: 2px solid white;
+}
+
+.btn-secondary:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Class animasi JS saat tombol diklik */
+.btn-clicked {
+    transform: scale(0.9) !important;
+    /* Membuat tombol mengecil */
+}
+
+/* Footer Polines */
+footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    text-align: center;
+    padding-bottom: 25px;
+}
+
+.footer-line {
+    width: 100%;
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.1);
+    margin-bottom: 20px;
+}
+
+footer p {
+    font-size: 0.75rem;
+    letter-spacing: 3px;
+    color: #888;
+    text-transform: uppercase;
+}
+
+/* CSS Khusus untuk Halaman Smartcane */
+.smartcane-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+@media (max-width: 900px) {
+    .smartcane-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.panel-card {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.panel-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #fafafa;
+}
+
+.panel-header h3 {
+    font-size: 1rem;
+    color: #111827;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.panel-header span {
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+/* Map Area */
+#map {
+    height: 500px;
+    width: 100%;
+    z-index: 1;
+}
+
+/* Status Perangkat List */
+.status-list {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.status-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.status-label {
+    color: #4b5563;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+}
+
+.status-value {
+    font-weight: 600;
+}
+
+.text-green {
+    color: #10b981;
+}
+
+.text-blue {
+    color: #3b82f6;
+}
+
+.dot {
+    height: 8px;
+    width: 8px;
+    background-color: #10b981;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 5px;
+}
+
+/* SOS Alert List */
+.sos-header {
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.sos-header h3 {
+    color: #ef4444;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+}
+
+.btn-log {
+    background-color: #fae115;
+    color: #1f2937;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Poppins';
+    transition: background 0.2s;
+}
+
+.btn-log:hover {
+    background-color: #e5cd12;
+}
+
+.sos-list {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.sos-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.sos-badge {
+    background-color: #fee2e2;
+    color: #ef4444;
+    font-weight: 700;
+    font-size: 0.75rem;
+    padding: 5px 8px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+}
+
+.sos-info h4 {
+    font-size: 0.85rem;
+    color: #1f2937;
+    margin: 0 0 2px 0;
+}
+
+.sos-info p {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin: 0;
+}

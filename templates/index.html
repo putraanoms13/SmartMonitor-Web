@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Monitor - Politeknik Negeri Semarang</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            color: white;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+
+            /* Latar Belakang Foto Polines dengan Efek Gelap */
+            background: linear-gradient(rgba(27, 36, 49, 0.7),
+                /* Transparansi sedikit dikurangi agar efek kaca lebih terlihat */
+                rgba(27, 36, 49, 0.7)),
+            url("{{ url_for('static', filename='bg-depan.jpg') }}");
+
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+        }
+
+        /* ========================================================
+           KARTU GLASSMORPHISM (EFEK TIMBUL TRANSPARAN)
+           ======================================================== */
+        .glass-card {
+            background: rgba(100, 100, 100, 0.05);
+            /* Warna putih yang sangat transparan */
+            backdrop-filter: blur(12px);
+            /* Efek buram/kaca di belakang elemen */
+            -webkit-backdrop-filter: blur(12px);
+            /* Dukungan untuk browser Safari */
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            /* Garis tepi putih transparan */
+            border-radius: 24px;
+            /* Ujung melengkung */
+            padding: 40px 50px;
+            /* Ruang bernapas di dalam kartu */
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            /* Bayangan agar terlihat timbul */
+            text-align: center;
+            z-index: 1;
+            max-width: 600px;
+            width: 85%;
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+
+        /* Animasi Muncul Halus */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo {
+            width: 130px;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.3));
+        }
+
+        h1 {
+            font-size: 4.5rem;
+            font-weight: 800;
+            margin: 0;
+            letter-spacing: 1px;
+            text-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+        }
+
+        p.subtitle {
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            margin-top: 10px;
+            margin-bottom: 40px;
+            color: #e2e8f0;
+            text-transform: uppercase;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-group {
+            display: flex;
+            justify-content: center; /* Memastikan tombol tepat di tengah */
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 35px;
+            border-radius: 30px;
+            font-size: 1rem;
+            font-weight: 800;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-family: 'Poppins', sans-serif;
+            letter-spacing: 1px;
+        }
+
+        .btn-masuk {
+            background-color: #fae115;
+            color: #111827;
+            padding: 15px 50px; /* Sedikit lebih lebar agar terlihat megah */
+            border-radius: 30px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 20px rgba(250, 225, 21, 0.4);
+        }
+
+        .btn-masuk:hover {
+            background-color: #e5cd12;
+            transform: translateY(-5px);
+            box-shadow: 0 0 30px rgba(250, 225, 21, 0.6);
+        }
+
+        .btn-daftar {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 2px solid white;
+            backdrop-filter: blur(5px);
+        }
+
+        .btn-daftar:hover {
+            background-color: rgba(255, 255, 255, 0.25);
+            transform: translateY(-3px);
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 30px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #cbd5e1;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Konten dibungkus dengan kartu Glassmorphism -->
+    <div class="glass-card">
+        <img src="{{ url_for('static', filename='polines.png') }}" alt="Logo Polines" class="logo">
+
+        <h1>Smart Monitor</h1>
+        <p class="subtitle">Monitoring Real-Time, Aman Sepanjang Jalan</p>
+
+    <div class="btn-group">
+        <a href="/masuk" class="btn btn-masuk">MULAI    SEKARANG</a>
+    </div>
+    </div>
+
+    <div class="footer">
+        POLITEKNIK NEGERI SEMARANG • REKAYASA INSTALASI LISTRIK
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log Riwayat & Tracking - SmartMonitor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #bfdbfe 100%) !important;
+            background-attachment: fixed !important;
+            margin: 0;
+            padding: 0;
+            color: #1e293b;
+        }
+
+        .top-nav-simple {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 70px !important;
+            z-index: 1002 !important;
+            box-sizing: border-box;
+            background-color: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(15px) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.5) !important;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 5% !important;
+        }
+
+        .btn-kembali {
+            text-decoration: none;
+            color: #1e293b;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: color 0.2s;
+            background-color: #ffffff;
+            padding: 8px 15px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .log-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 100px 20px 40px 20px;
+        }
+
+        .network-badge {
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #475569;
+        }
+
+        .ping-dot {
+            color: #10b981;
+            animation: pulseLive 2s infinite;
+            display: inline-block;
+        }
+
+        @keyframes pulseLive {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .network-wrapper {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+            margin-right: 15px;
+        }
+
+        .network-dropdown {
+            position: absolute;
+            top: 140%;
+            right: 0;
+            width: 320px;
+            background-color: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(20px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(15, 23, 42, 0.1);
+            padding: 20px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 1005;
+            cursor: default;
+        }
+
+        .network-wrapper:hover .network-dropdown {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .net-drop-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+
+        .text-green-gradient {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: transparent;
+        }
+
+        .page-title {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 30px;
+        }
+
+        .log-grid {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 30px;
+            align-items: start;
+        }
+
+        @media (max-width: 900px) {
+            .log-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .log-card,
+        .table-container {
+            background-color: rgba(255, 255, 255, 0.85) !important;
+            backdrop-filter: blur(10px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            border-radius: 24px !important;
+            box-shadow: 0 8px 32px rgba(15, 23, 42, 0.05) !important;
+        }
+
+        .log-card {
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+
+        .summary-box {
+            background-color: rgba(255, 255, 255, 0.5);
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            margin-bottom: 15px;
+        }
+
+        .summary-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #1e293b;
+        }
+
+        .trend-red {
+            color: #ef4444;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .btn-danger-reset {
+            width: 100%;
+            background: #fee2e2;
+            color: #ef4444;
+            border: 1px solid #fca5a5;
+            padding: 12px;
+            border-radius: 12px;
+            font-family: 'Poppins';
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-danger-reset:hover {
+            background: #ef4444;
+            color: white;
+            transform: scale(1.02);
+        }
+
+        .table-container {
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background-color: rgba(248, 250, 252, 0.5);
+            text-align: left;
+            padding: 15px 25px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #64748b;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        td {
+            padding: 20px 25px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            vertical-align: middle;
+            transition: background-color 0.3s;
+        }
+
+        tr:hover td {
+            background-color: rgba(248, 250, 252, 0.5);
+        }
+
+        .cell-time {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .date-text {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .loc-coord {
+            font-weight: 600;
+            color: #1e293b;
+            display: block;
+        }
+
+        .action-link {
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        @keyframes highlightSOS {
+            0% {
+                background-color: rgba(239, 68, 68, 0.15);
+            }
+
+            100% {
+                background-color: transparent;
+            }
+        }
+
+        .row-baru td {
+            animation: highlightSOS 3s ease-out;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="top-nav-simple">
+        <a href="/smartcane" class="btn-kembali"><i class="fa-solid fa-arrow-left"></i> Kembali</a>
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="network-wrapper">
+                <div class="network-badge">
+                    <i class="fa-solid fa-wifi ping-dot"></i> <span id="nav-ping">42ms</span>
+                    <span style="color: #cbd5e1;">|</span>
+                    <span style="color: #10b981;"><i class="fa-solid fa-arrow-down" style="font-size: 0.7rem;"></i>
+                        <span id="nav-dl">0.0</span></span>
+                    <span style="color: #2563eb;"><i class="fa-solid fa-arrow-up" style="font-size: 0.7rem;"></i> <span
+                            id="nav-ul">0.0</span> Mbps</span>
+                </div>
+                <div class="network-dropdown">
+                    <div class="net-drop-title">Detail Bandwidth</div>
+                    <div class="net-drop-box" style="margin-bottom: 15px;"><span class="net-label">Total Data Sesi
+                            Ini</span>
+                        <div class="net-value text-green-gradient" id="drop-total-data">0.0 <small>MB</small></div>
+                    </div>
+                </div>
+            </div>
+            <img src="{{ url_for('static', filename='polines.png') }}" alt="Logo Polines" style="height: 32px;">
+            <span style="font-family: 'Poppins'; font-size: 1rem; font-weight: 700;">POLINES | Smart Monitor</span>
+            <i class="fa-solid fa-person-walking-with-cane" style="color: #2563eb; font-size: 1.5rem;"></i>
+        </div>
+    </header>
+
+    <main class="log-container">
+        <h1 class="page-title">Log Riwayat SOS</h1>
+        <div class="log-grid">
+            <aside>
+                <div class="log-card">
+                    <h3 class="card-header-title"><i class="fa-solid fa-chart-line" style="color: #2563eb;"></i>
+                        Ringkasan SOS</h3>
+                    <div class="summary-box">
+                        <span class="summary-label">Total Peringatan Aktif</span>
+                        <div class="summary-data">
+                            <span class="summary-value" id="angka-total-sos">0</span>
+                            <span class="trend-red"><i class="fa-solid fa-tower-broadcast"></i> Live</span>
+                        </div>
+                    </div>
+                    <button class="btn-danger-reset" onclick="resetSOSHistory()">
+                        <i class="fa-solid fa-trash-can"></i> Reset Riwayat SOS
+                    </button>
+                    <button class="btn-danger-reset" onclick="resetTrackingHistory()"
+                        style="margin-top: 10px; background: #fff7ed; color: #d97706; border-color: #fcd34d;">
+                        <i class="fa-solid fa-broom"></i> Bersihkan Tracking GPS
+                    </button>
+                </div>
+
+                <div class="log-card">
+                    <h3 class="card-header-title"><i class="fa-solid fa-server" style="color: #10b981;"></i> Status
+                        Database</h3>
+                    <p style="font-size: 0.8rem; color: #64748b; line-height: 1.5; margin-bottom: 0;">Sistem saat ini
+                        sedang merekam <i>tracking</i> GPS secara otomatis di latar belakang ke Firebase.</p>
+                </div>
+            </aside>
+
+            <section>
+                <h3 style="font-size: 1rem; margin-bottom: 15px; color: #ef4444;"><i class="fa-solid fa-bell"></i> Tabel
+                    Kejadian SOS</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>WAKTU</th>
+                                <th>LOKASI / GPS</th>
+                                <th style="text-align: right;">AKSI</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabel-riwayat">
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-database-compat.js"></script>
+    <script>
+        function updateBandwidth() {
+            document.getElementById('nav-ping').innerText = (Math.floor(Math.random() * 30) + 20) + "ms";
+            document.getElementById('nav-dl').innerText = (Math.random() * 1.5).toFixed(2);
+            document.getElementById('nav-ul').innerText = (Math.random() * 0.8).toFixed(2);
+        }
+        setInterval(updateBandwidth, 2000);
+
+        const firebaseConfig = { apiKey: "AIzaSyC_SM8X6zFeQc1mVhBRgDocIXygI5gwUgw", authDomain: "smartcane-kevin.firebaseapp.com", databaseURL: "https://smartcane-kevin-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "smartcane-kevin", storageBucket: "smartcane-kevin.firebasestorage.app", messagingSenderId: "749953676815", appId: "1:749953676815:web:9a773acb068e46c28d157a" };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        const historyRef = db.ref("/Tunanetra/HistorySOS");
+        const trackingRef = db.ref("/Tunanetra/DailyTracking");
+
+        // FUNGSI RESET MANUAL SOS (DIPERBAIKI: Hapus Memory Browser)
+        function resetSOSHistory() {
+            if (confirm("Apakah Anda yakin ingin menghapus SEMUA riwayat kejadian SOS? Tindakan ini tidak bisa dibatalkan.")) {
+                historyRef.remove();
+                db.ref("/Tunanetra/JumlahSOS").set(0);
+                localStorage.setItem('lastHandledSOS', -1); // <-- Kunci perbaikannya di sini
+                alert("Riwayat SOS telah dibersihkan!");
+                location.reload();
+            }
+        }
+
+        // FUNGSI RESET MANUAL TRACKING HARIAN
+        function resetTrackingHistory() {
+            if (confirm("Apakah Anda yakin ingin menghapus SEMUA data tracking GPS harian secara paksa?")) {
+                trackingRef.remove();
+                alert("Database Tracking GPS telah dikosongkan!");
+            }
+        }
+
+        // FUNGSI PEMBERSIH OTOMATIS 24 JAM
+        function cleanOldData(ref) {
+            ref.once("value", (snapshot) => {
+                const now = Date.now();
+                snapshot.forEach((child) => {
+                    if (child.val().timestamp && (now - child.val().timestamp > 86400000)) {
+                        ref.child(child.key).remove();
+                    }
+                });
+            });
+        }
+        cleanOldData(historyRef);
+        cleanOldData(trackingRef);
+
+        // LISTENER TABEL SOS UTAMA
+        const tbodySOS = document.getElementById('tabel-riwayat');
+        let jumlahAktif = 0;
+
+        historyRef.on("child_added", (snapshot) => {
+            const log = snapshot.val();
+            const now = Date.now();
+
+            if (log.timestamp && (now - log.timestamp > 86400000)) return;
+
+            jumlahAktif++;
+            document.getElementById('angka-total-sos').innerText = jumlahAktif;
+
+            let row = document.createElement('tr');
+            row.id = "sos-" + snapshot.key;
+            row.className = 'row-baru';
+            row.innerHTML = `<td><div class="cell-time"><i class="fa-solid fa-bell" style="color:#ef4444;"></i><div><span class="date-text">${log.tanggal}</span><br><small>${log.waktu}</small></div></div></td><td><span class="loc-coord">${log.lat.toFixed(5)}, ${log.lng.toFixed(5)}</span><span style="color:#ef4444;font-size:0.8rem;font-weight:600;">Darurat</span></td><td style="text-align:right;"><a href="https://maps.google.com/?q=$${log.lat},${log.lng}" target="_blank" class="action-link"><i class="fa-solid fa-map-location-dot"></i> Google Maps</a></td>`;
+            tbodySOS.insertBefore(row, tbodySOS.firstChild);
+        });
+
+        // Hapus dari tabel jika dihapus secara manual/sistem
+        historyRef.on("child_removed", (snap) => {
+            const rowToRemove = document.getElementById("sos-" + snap.key);
+            if (rowToRemove) {
+                rowToRemove.remove();
+                jumlahAktif--;
+                if (jumlahAktif < 0) jumlahAktif = 0;
+                document.getElementById('angka-total-sos').innerText = jumlahAktif;
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar - SmartMonitor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='login.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+
+            background: linear-gradient(rgba(27, 36, 49, 0.75),
+                rgba(27, 36, 49, 0.75)),
+            url("{{ url_for('static', filename='bg-depan.jpg') }}");
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: white;
+        }
+    </style>
+
+    <div class="login-container">
+        <div class="login-card">
+            <h2 class="form-title">Buat Akun Anda</h2>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div
+                style="background-color: rgba(255, 76, 76, 0.1); border: 1px solid #ff4c4c; color: #ff4c4c; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 20px; font-size: 0.9rem;">
+                {{ message }}
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <form action="/daftar" method="POST" id="form-daftar">
+                <div class="input-group">
+                    <label for="nama">Nama Lengkap</label>
+                    <input type="text" id="nama" name="nama" placeholder="Masukkan nama lengkap Anda" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="email">Alamat Email</label>
+                    <input type="email" id="email" name="email" placeholder="Masukkan alamat email Anda" required>
+                </div>
+
+                <div class="input-group" id="grup-verifikasi" style="display: none; transition: all 0.3s ease;">
+                    <label for="kode">Kode Verifikasi (6 Digit)</label>
+                    <input type="text" id="kode" name="kode" placeholder="Masukkan 6 digit kode dari email"
+                        maxlength="6" pattern="\d{6}" required>
+                    <span id="pesan-sukses" style="color: #ccc; font-size: 0.8rem; margin-top: 8px;">Memproses...</span>
+                </div>
+
+                <div class="input-group">
+                    <label for="password">Kata Sandi</label>
+                    <input type="password" id="password" name="password"
+                        placeholder="Buat kata sandi (Minimal 8 karakter)" minlength="8" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="confirm_password">Konfirmasi Kata Sandi</label>
+                    <input type="password" id="confirm_password" name="confirm_password"
+                        placeholder="Masukkan kembali kata sandi Anda" minlength="8" required>
+                </div>
+
+                <button type="submit" class="btn-submit" style="margin-top: 15px;">Buat Akun</button>
+            </form>
+
+            <div class="register-footer">
+                Sudah punya akun? <a href="/masuk">Masuk</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const emailInput = document.getElementById('email');
+        const grupVerifikasi = document.getElementById('grup-verifikasi');
+        const pesanSukses = document.getElementById('pesan-sukses');
+        const formDaftar = document.getElementById('form-daftar');
+
+        // Fitur 1: Mengirim email otomatis saat selesai mengetik email
+        emailInput.addEventListener('blur', function () {
+            const emailValue = this.value;
+
+            if (emailValue.includes('@') && emailValue.includes('.')) {
+                grupVerifikasi.style.display = 'flex';
+                pesanSukses.innerText = "Mengirim kode verifikasi ke email...";
+                pesanSukses.style.color = "#ccc";
+
+                // Menghubungi Flask untuk mengirim OTP
+                fetch('/kirim-kode', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: emailValue })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'sukses') {
+                            pesanSukses.innerText = "Kode verifikasi telah otomatis dikirim ke email Anda!";
+                            pesanSukses.style.color = "#fae115"; // Warna kuning
+                        } else {
+                            pesanSukses.innerText = "Gagal mengirim kode: " + data.pesan;
+                            pesanSukses.style.color = "#ff4c4c"; // Warna merah
+                        }
+                    })
+                    .catch(error => {
+                        pesanSukses.innerText = "Terjadi kesalahan jaringan.";
+                        pesanSukses.style.color = "#ff4c4c";
+                    });
+            } else {
+                grupVerifikasi.style.display = 'none';
+            }
+        });
+
+        // Fitur 2: Validasi tambahan untuk kesamaan kata sandi saat ditekan 'Buat Akun'
+        formDaftar.addEventListener('submit', function (e) {
+            const pwd = document.getElementById('password').value;
+            const pwdConfirm = document.getElementById('confirm_password').value;
+
+            if (pwd !== pwdConfirm) {
+                e.preventDefault(); // Mencegah form terkirim
+                alert("Kata sandi dan Konfirmasi Kata Sandi tidak cocok!");
+            } else {
+                // Munculkan pop-up sukses sebelum Flask mengalihkan ke halaman Masuk
+                alert("Registrasi berhasil! Silakan masuk menggunakan akun baru Anda.");
+            }
+        });
+    </script>
+</body>
+
+</html>
