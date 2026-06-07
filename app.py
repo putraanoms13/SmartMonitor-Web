@@ -1,11 +1,14 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session
 from flask_mail import Mail, Message
-from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired
 import random
 import os
 from werkzeug.utils import secure_filename
+
+# IMPORT FIREBASE ADMIN SDK
+import firebase_admin
+from firebase_admin import credentials, firestore
 
 app = Flask(__name__)
 
@@ -22,27 +25,14 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # ==========================================
-# KONFIGURASI DATABASE
+# KONFIGURASI FIREBASE CLOUD FIRESTORE
 # ==========================================
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///smartmonitor.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
+# Membaca file kunci rahasia JSON dari Firebase Console yang kamu taruh di folder utama
+cred = credentials.Certificate("firebase-key.json")
+firebase_admin.initialize_app(cred)
 
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    nama = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(100), unique=True, nullable=False)
-    password = db.Column(db.String(200), nullable=False)
-    foto_profil = db.Column(db.String(100), default='polines.png')
-
-    def __init__(self, nama, email, password, foto_profil='polines.png'):
-        self.nama = nama
-        self.email = email
-        self.password = password
-        self.foto_profil = foto_profil
-
-with app.app_context():
-    db.create_all()
+# Inisialisasi Database Firestore
+db = firestore.client()
 
 # ==========================================
 # KONFIGURASI FLASK-MAIL
@@ -67,16 +57,21 @@ def masuk():
     if request.method == 'POST':
         email_input = request.form.get('email')
         password_input = request.form.get('password')
-        user = User.query.filter_by(email=email_input).first()
+        
+        # Mengambil data dari dokumen dokumen 'email' di collection 'users'
+        user_ref = db.collection('users').document(email_input)
+        user_doc = user_ref.get()
 
-        if user and check_password_hash(user.password, password_input):
-            session['user_id'] = user.id
-            session['nama'] = user.nama
-            return redirect(url_for('dashboard'))
-        else:
-            flash('Email atau kata sandi salah! Silakan coba lagi.', 'error')
-            # Jika error, kembalikan ke auth.html dan pastikan tab 'login' yang terbuka
-            return render_template('auth.html', active_tab='login')
+        if user_doc.exists:
+            user_data = user_doc.to_dict()
+            # Validasi hash password
+            if check_password_hash(user_data['password'], password_input):
+                session['user_id'] = email_input  # Gunakan email sebagai ID unik session
+                session['nama'] = user_data['nama']
+                return redirect(url_for('dashboard'))
+        
+        flash('Email atau kata sandi salah! Silakan coba lagi.', 'error')
+        return render_template('auth.html', active_tab='login')
             
     return render_template('auth.html', active_tab='login')
 
@@ -87,16 +82,20 @@ def daftar():
         email = request.form.get('email')
         password = request.form.get('password')
 
-        user_exist = User.query.filter_by(email=email).first()
-        if user_exist:
+        # Cek apakah dokumen email sudah ada di Firebase
+        user_ref = db.collection('users').document(email)
+        if user_ref.get().exists:
             flash('Email tersebut sudah terdaftar! Silakan langsung masuk.', 'error')
-            # Jika error, kembalikan ke auth.html dan pastikan tab 'register' yang terbuka
             return render_template('auth.html', active_tab='register')
 
+        # Eksekusi penyimpanan data baru ke Firebase Firestore
         hashed_password = generate_password_hash(password)
-        new_user = User(nama=nama, email=email, password=hashed_password)
-        db.session.add(new_user)
-        db.session.commit()
+        user_ref.set({
+            'nama': nama,
+            'email': email,
+            'password': hashed_password,
+            'foto_profil': 'polines.png'
+        })
         
         flash('Pendaftaran berhasil! Silakan login.', 'success')
         return redirect(url_for('masuk'))
@@ -107,15 +106,22 @@ def daftar():
 def dashboard():
     if 'user_id' not in session:
         return redirect(url_for('masuk'))
-    user_aktif = User.query.get(session['user_id'])
-    return render_template('dashboard.html', user=user_aktif)
+    
+    user_ref = db.collection('users').document(session['user_id'])
+    user_doc = user_ref.get()
+    
+    if not user_doc.exists:
+        return redirect(url_for('keluar'))
+        
+    return render_template('dashboard.html', user=user_doc.to_dict())
 
 @app.route('/pengaturan', methods=['GET', 'POST'])
 def pengaturan():
     if 'user_id' not in session:
         return redirect(url_for('masuk'))
     
-    user_aktif = User.query.get(session['user_id'])
+    user_ref = db.collection('users').document(session['user_id'])
+    user_data = user_ref.get().to_dict()
     
     if request.method == 'POST':
         nama_baru = request.form.get('nama')
@@ -123,53 +129,54 @@ def pengaturan():
         password_baru = request.form.get('password')
         foto_baru = request.files.get('foto_profil')
         
+        update_data = {}
+
         # PROSES UNGGAH FOTO
         if foto_baru and foto_baru.filename != '':
             if allowed_file(foto_baru.filename):
                 filename = secure_filename(foto_baru.filename)
-                nama_file_unik = f"user_{user_aktif.id}_{filename}"
+                # Membuat nama file unik berdasarkan session ID (email)
+                nama_file_unik = f"user_{session['user_id'].replace('@', '_')}_{filename}"
                 filepath = os.path.join(app.config['UPLOAD_FOLDER'], nama_file_unik)
                 
                 if not os.path.exists(app.config['UPLOAD_FOLDER']):
                     os.makedirs(app.config['UPLOAD_FOLDER'])
                     
                 foto_baru.save(filepath)
-                user_aktif.foto_profil = nama_file_unik
+                update_data['foto_profil'] = nama_file_unik
             else:
                 flash('Format foto tidak didukung.', 'error')
                 return redirect(url_for('pengaturan'))
 
         if nama_baru:
-            user_aktif.nama = nama_baru
+            update_data['nama'] = nama_baru
             session['nama'] = nama_baru
-        if email_baru and email_baru != user_aktif.email:
-            cek_email = User.query.filter_by(email=email_baru).first()
-            if cek_email:
-                flash('Email sudah terdaftar pada akun lain!', 'error')
-                return redirect(url_for('pengaturan'))
-            user_aktif.email = email_baru
-        if password_baru:
-            user_aktif.password = generate_password_hash(password_baru)
             
-        db.session.commit()
+        if password_baru:
+            update_data['password'] = generate_password_hash(password_baru)
+            
+        # Jika ada data yang diubah, lakukan pembaruan dokumen di Firebase
+        if update_data:
+            user_ref.update(update_data)
+            
         flash('Profil berhasil diperbarui!', 'success')
         return redirect(url_for('pengaturan'))
     
-    return render_template('pengaturan.html', user=user_aktif)
+    return render_template('pengaturan.html', user=user_data)
 
 @app.route('/smartcane')
 def smartcane():
     if 'user_id' not in session:
         return redirect(url_for('masuk'))
-    user_aktif = User.query.get(session['user_id'])
-    return render_template('smartcane.html', user=user_aktif)
+    user_ref = db.collection('users').document(session['user_id'])
+    return render_template('smartcane.html', user=user_ref.get().to_dict())
 
 @app.route('/smartglasses')
 def smartglasses():
     if 'user_id' not in session:
         return redirect(url_for('masuk'))
-    user_aktif = User.query.get(session['user_id'])
-    return render_template('smartglasses.html', user=user_aktif)
+    user_ref = db.collection('users').document(session['user_id'])
+    return render_template('smartglasses.html', user=user_ref.get().to_dict())
 
 @app.route('/riwayat-sos')
 def riwayat_sos():
@@ -178,7 +185,7 @@ def riwayat_sos():
     return render_template('riwayat_sos.html')
 
 # ==========================================
-# API BARU: TRIGGER KIRIM EMAIL SOS KE SEMUA USER
+# API TRIGGER EMERGENSI SOS (MEMBACA DATA FIREBASE GLOBLAL)
 # ==========================================
 @app.route('/trigger-sos-email', methods=['POST'])
 def trigger_sos_email():
@@ -186,28 +193,29 @@ def trigger_sos_email():
     lat = data.get('lat')
     lng = data.get('lng')
     
-    # 1. Ambil SEMUA data user dari database SQLite
-    semua_user = User.query.all()
+    # 1. Ambil SEMUA dokumen dari collection 'users' di Firebase
+    users_ref = db.collection('users')
+    docs = users_ref.stream()
     
-    # 2. Kumpulkan semua alamat emailnya ke dalam satu list
-    daftar_email = [user.email for user in semua_user if user.email]
+    # 2. Ambil list email dari seluruh dokumen
+    daftar_email = [doc.to_dict().get('email') for doc in docs if doc.to_dict().get('email')]
             
     if not daftar_email:
-        print("⚠️ SOS Terdeteksi: Tapi tidak ada user terdaftar di database.")
+        print("⚠️ SOS Terdeteksi: Tapi tidak ada user terdaftar di Firebase.")
         return jsonify({"status": "warning", "message": "Tidak ada user terdaftar"}), 200
         
     link_riwayat = url_for('riwayat_sos', _external=True)
-    link_maps = f"https://www.google.com/maps/search/?api=1&query={lat},{lng}"
+    link_maps = f"https://maps.google.com/?q={lat},{lng}"
     
-    # 3. Tembakkan email ke semua alamat sekaligus
+    # 3. Tembakkan email SOS massal
     try:
         msg = Message("[EMERGENCY] Panggilan SOS Tunanetra!", recipients=daftar_email)
         msg.body = f"Bahaya! Pengguna Smartcane baru saja menekan tombol darurat SOS.\n\nLokasi terakhir (Google Maps): {link_maps}\n\nLihat Log Riwayat Lengkap di Website:\n{link_riwayat}"
         mail.send(msg)
-        print(f"✅ BERHASIL: Email SOS dikirim ke -> {daftar_email}")
+        print(f"✅ BERHASIL: Email SOS Firebase dikirim ke -> {daftar_email}")
         return jsonify({"status": "success", "message": f"Email SOS berhasil dikirim!"})
     except Exception as e:
-        print(f"❌ GAGAL KIRIM EMAIL: {str(e)}") # Membantu melacak error di terminal
+        print(f"❌ GAGAL KIRIM EMAIL SOS: {str(e)}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.route('/kirim-kode', methods=['POST'])
@@ -234,13 +242,14 @@ def keluar():
 def lupa_kata_sandi():
     if request.method == 'POST':
         email = request.form.get('email')
-        user = User.query.filter_by(email=email).first()
-        if user:
+        user_ref = db.collection('users').document(email)
+        
+        if user_ref.get().exists:
             token = s.dumps(email, salt='email-reset-salt')
             link = url_for('reset_password', token=token, _external=True)
             try:
                 msg = Message("Pemulihan Kata Sandi SmartMonitor", recipients=[email])
-                msg.body = f"Klik tautan ini untuk reset: {link}"
+                msg.body = f"Klik tautan ini untuk mereset kata sandi akun SmartMonitor Anda: {link}"
                 mail.send(msg)
                 flash('Tautan pemulihan telah berhasil dikirim!', 'success')
             except Exception:
@@ -263,12 +272,14 @@ def reset_password(token):
         
     if request.method == 'POST':
         password_baru = request.form.get('password')
-        user = User.query.filter_by(email=email).first()
-        if user:
-            user.password = generate_password_hash(password_baru)
-            db.session.commit()
+        user_ref = db.collection('users').document(email)
+        
+        if user_ref.get().exists:
+            hashed_password = generate_password_hash(password_baru)
+            user_ref.update({'password': hashed_password}) # Perbarui password di Firebase
             flash('Kata sandi berhasil diatur ulang!', 'success')
             return redirect(url_for('masuk'))
+            
     return render_template('reset_password.html', token=token)
 
 if __name__ == '__main__':
